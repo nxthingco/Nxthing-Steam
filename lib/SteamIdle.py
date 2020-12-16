@@ -5,11 +5,16 @@ def idle(method):
 		clients = []
 		users = []
 		t = []
+
 		for x in range(0,len(tAccounts)):
 			clients.append(x)
 			users.append(x)
+
 		for i in range(len(clients)):
 			clients[i] = SteamClient()
+			# КЛИЕНТЫ ГОТОВЫ
+
+
 		for z in range(0,len(tAccounts)):
 			r = clients[z].login(username=tAccounts[z],password=tPasswords[z])
 			if r == 'EResult.OK':
@@ -21,10 +26,16 @@ def idle(method):
 			clients[z].games_played(GamesToIdle)
 			start = datetime.now()
 			print('Start: ' + start.strftime("\nYear: %Y\nMonth: %B\nDay: %d\nTime: %H:%M:%S"))
+
 		for z in range(0,len(tAccounts)):
 			clients[z].run_forever()
+
+
 	elif method == 'SingleAccount':
 		log_key = ''
+		with open('texts\login_keys.txt','r') as lk:
+			log_key = lk.read()
+			#log_key = re.split('{0}:{1}')
 		clientSA = SteamClient()
 		r = clientSA.login(username=SAlogin,password=SApass)
 
@@ -46,6 +57,7 @@ def idle(method):
 				d12 = clientSA.login(username=SAlogin,password=SApass,two_factor_code=twofactor)
 				if d12 == EResult.OK:
 					print('{0}Account Connected: [{1}:{2}]'.format(Xtag,SAlogin,SApass))
+					#with open('texts\login_keys.txt','w') as lg:
 				else:
 					if d12 == EResult.RateLimitExceeded:
 						print('[XSteam] Steam Error: Try again later')
@@ -60,18 +72,26 @@ def idle(method):
 					elif clientSA.relogin_available:
 						print(Xtag + 'Try relogin [{0}:{1}]'.format(SAlogin,SApass))
 						clientSA.relogin()
+
 		start = datetime.now()
 		print('Start: ' + start.strftime("\nYear: %Y\nMonth: %B\nDay: %d\nTime: %H:%M:%S"))
+
 		clientSA.set_ui_mode(3)
 		clientSA.games_played(GamesToIdle)
 		clientSA.change_status(persona_state=7)
 		print(Xtag + 'Games started.')
 		clientSA.run_forever()
+
+
 	elif method == 'NewAccount':
+
 		aoaLogin = input('[XSteam] Введите логин от аккаунта: ')
 		aoaPass = input('[XSteam] Введите пароль от аккаунта: ')
+
 		clientNA = SteamClient()
 		r = clientNA.login(username=aoaLogin,password=aoaPass)
+
+
 		if r == EResult.OK:
 			print(Xtag + 'Account Connected: [{0}:{1}]'.format(aoaLogin,aoaPass))
 		else:
@@ -85,12 +105,15 @@ def idle(method):
 				if clientNA.relogin_available:
 					print(Xtag + 'Try relogin [{0}:{1}]'.format(aoaLogin,aoaPass))
 					clientNA.relogin()
+
 		start = datetime.now()
 		print('Start: ' + start.strftime("\nYear: %Y\nMonth: %B\nDay: %d\nTime: %H:%M:%S"))
+
 		clientNA.set_ui_mode(3)
 		clientNA.games_played(GamesToIdle)
 		clientNA.change_status(persona_state=7)
 		print(Xtag + 'Games started.')
 		clientNA.run_forever()
+
 	else:
 		print('[XSteam Error]: Wrong method selected.')

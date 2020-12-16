@@ -2,12 +2,16 @@ from libs import *
 ReqCode = ''
 client = SteamClient()
 accs = list()
-f = open('texts\accs.txt')
-for i in f:
-    acc = i.replace(':',';').strip('\n').strip(' ').strip('\r').split(';')
-    acc = acc[0] + ';' + acc[1]
-    accs.append(acc)
-f.close()
+cur_path = os.path.dirname(__file__)
+new_path = cur_path + '/texts/accs.txt'
+
+with open (new_path,'r') as f:
+	for i in f:
+	    acc = i.replace(':',';').strip('\n').strip(' ').strip('\r').split(';')
+	    acc = acc[0] + ';' + acc[1]
+	    accs.append(acc)
+	f.close()
+	
 FreeGames = [
 	6328, # ProtoGalaxy
 	21289, # Bloodline Champions
@@ -149,7 +153,7 @@ def SteamRevive():
 			session = user.login()
 		except sw.CaptchaRequired as err:
 			print('[XSteam Error] Captcha Required - {0}:{1}'.format(username,password))
-			with open('texts\Captcha_URL.txt','w') as CUw:
+			with open('texts/Captcha_URL.txt','w') as CUw:
 				CUw.write(user.captcha_url)
 				CUw.close()
 			continue

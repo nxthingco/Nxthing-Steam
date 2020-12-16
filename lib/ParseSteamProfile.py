@@ -22,34 +22,41 @@ def parse_steamprofile():
 	session = requests.get(url)
 	session_z = requests.get(url + '/inventory')
 	session_games = requests.get(url + '/games/?tab=all&xml=1')
+	badge_response = requests.get(url + '/badges/1')
+
 	soup_x = BeautifulSoup(session.content,'html5lib')
 	soup_z = BeautifulSoup(session_z.content,'html5lib')
 	soup_c = BeautifulSoup(session.text,'html5lib')
-	session_games = requests.get(url + '/games/?tab=all&xml=1')
 	soup_games = BeautifulSoup(session_games.text,'html5lib')
-	r_games = soup_games.find_all('name')
+	soup_badge = BeautifulSoup(badge_response.text,'html.parser')
 	########################### INVENTORY PARSE (NEED REWORK)######################
 	inventorycheck = soup_z.find_all('span','games_list_tab_name')
 	countInventoryItems = soup_z.find_all('span','games_list_tab_number')
 	vanityurl = soup_c.find(string=re.compile('g_rgProfileData'))
+	r_games = soup_games.find_all('name')
+	# КОЛ-ВО ПРЕДМЕТОВ ИНВЕНТАРЬ
+	# Конвертирование тэга в list
 	par = []
 	cII = []
 	for x in countInventoryItems:
 		cII.append(str(x))
-	cII4 = re.split('class',''.join(cII))
+	cII4 = re.split('class',''.join(cII)) # <--------- РАБОТАЕТ ТОЛЬКО С ЭТОЙ СТРОКОЙ
 	for x in ('[(< >)/="]','games_list_tab_number','span'):
 		cII4 = re.split(x,''.join(cII4))
 	for x in inventorycheck:
 		par.append(str(x))
-	test4 = re.split('class',''.join(par))
+	test4 = re.split('class',''.join(par)) # <--------- РАБОТАЕТ ТОЛЬКО С ЭТОЙ СТРОКОЙ
 	for x in ('[<>/="]','games_list_tab_name','span'):
 		test4 = re.split(x,''.join(test4))
 	# Создание кортежа из 2 списков(одинаковой длины)
 	del test4[0]
 	del cII4[0]
 	items_and_count = dict(zip(test4,cII4))
+	# КОЛИЧЕСТВО ИГР
 	info = GetGamesInDict(SteamID.from_url(url))
 	GamesCount = len(info["gamesList"]["games"]["game"])
+	#ДАТА СОЗДАНИЯ АККАУНТА
+	MemberSince = soup_badge.find('div',class_='badge_description')
 	#################################################################################
 	try:
 		name = soup_x.find('span','actual_persona_name').text
@@ -66,6 +73,7 @@ def parse_steamprofile():
 			+ 'Level: ' + level + '\n' 
 			+ 'Country: ' + country.rstrip('\n')
 			+ 'Real Name: ' + real_name + '\n')
+		#test_f = re.split('\s+',''.join(test18))
 	except:
 		print('Закрытый профиль')
 	try:
@@ -77,29 +85,49 @@ def parse_steamprofile():
 	except:
 		print('VAC не найден')
 	private_profile = soup_x.find('div','profile_private_info')
+
+	if MemberSince:
+		MemberSince = re.split('\s+',''.join(MemberSince))
+		del MemberSince[0],MemberSince[-1]
+		print(''.join(MemberSince))
+	else:
+		print('Невозможно определить дату создания аккаунта')
+
+	# Конвертирование тэга в list
 	qw = []
 	for x in r_games:
 		qw.append(str(x))
 	w = ''.join(qw)
+	
 	test = soup_x.select('.profile_in_game_header')
 	test2 = soup_x.select('.profile_in_game_name')
 	StageCur = []
 	for x in test:
 		StageCur.append(str(x))
 	StageCurr = [6]
+	StageCurr1 = re.split('div',''.join(StageCur))
+	for x in ('div','class','[<>=/"]','profile_in_game_header','\s'):
+		StageCurr1 = re.split(x,''.join(StageCurr1))
+
 	if private_profile == None:
 		print('Профиль открыт')
 	else:
 		print('Профиль закрыт')
 	print('Игр на аккаунте: ' + str(GamesCount))
 	print('Состояние:{0}'.format(' '.join(StageCurr1)))
+	print('------------------------ [Steam IDS] ------------------------')
 	GSI.solo(url)
 	print('Permalink: https://steamcommunity.com/profile/' + str(SteamID.from_url(url)))
+	#print('Profile URL: ' + ':'.join(vanityurl18))
+	print('------------------------ [Inventory] ------------------------')
 	print('\n')
 	for k,v in items_and_count.items():
 		print('[Game: {0}] - [Items: {1}]'.format(k,v))
 	for i in ('/','<','>','name',']','[','--','','CDATA'):
 		w = w.replace(i,'')
+	print('------------------------ [Games] ------------------------')
 	out = w.split('!')
 	del out[0]
-	print('Games: ' +',  '.join(out))
+	for k in out:
+		print('[Game: {0}]'.format(k))
+	#print('Games: ' +'\n '.join(out))
