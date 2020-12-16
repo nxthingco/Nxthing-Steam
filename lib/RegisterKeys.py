@@ -13,8 +13,8 @@ def RegisterKey():
 
 		
 	print('[XSteam] - Введите данные аккаунта, на который нужно активировать ключи.')
-	rkLogin= 's52654120'#input('[XSteam] Введите ваш логин: ')
-	rkPass= 'Koivuselga4'#input('[XSteam] Введите ваш пароль: ')
+	rkLogin= input('[XSteam] Введите ваш логин: ')
+	rkPass= input('[XSteam] Введите ваш пароль: ')
 	rkLog = clientKey.login(username=rkLogin,password=rkPass)
 
 	if rkLog == EResult.OK:
