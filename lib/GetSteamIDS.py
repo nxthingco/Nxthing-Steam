@@ -21,6 +21,8 @@ class get_steam_info():
 		steamacct = z * 2 + y
 		steamid_r.append(str(steamacct))
 		return ''.join(steamid_r)
+	def SteamId(text):
+		return SteamID.from_url(text)
 	def solo(text):
 		r = SteamID.from_url(text)
 		print('[1] - Steam 64: ' + str(r)) # 76561198044525640

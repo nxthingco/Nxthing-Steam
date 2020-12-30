@@ -1,4 +1,12 @@
-from libs import *
+#from libs import *
+from gevent import monkey
+monkey.patch_all()
+import requests
+from bs4 import BeautifulSoup
+import json
+import time
+import re
+from GetSteamIDS import get_steam_info as gsi
 
 url = 'https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v2/'
 FRIEND_LIST = 'https://api.steampowered.com/ISteamUser/GetFriendList/v1/?'
@@ -18,113 +26,100 @@ INCLUDE_APPINFO = 0
 INCLUDE_PLAYED_FREE_GAMES = 0
 INCLUDE_FREE_SUB = 1
 
-# getting app ids
-def GetPlayerGames():
-	#url = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?&key=FC50418A73E16C7AF179335DAC694619&include_played_free_games=1&include_free_sub=1&steamid=76561198044525640'
-	url = PLAYER_OWNED_GAMES + '&key=' + api_key + '&' + steam_id
-	session = requests.get(url)
-	r = json.loads(session.text)
-	dr = r['response']['games']
+class SteamApi():
 
-	app_ids = []
+	def API_Get(method,url,apikey,steamid):
+		if method == 1:
+			session = requests.get(url + 'key=' + apikey + "&steamid=" + steamid)
+			soup = BeautifulSoup(session.text,'html.parser')
+			return soup
+		elif method == 2:
+			session = requests.get(url + 'key=' + apikey + "&steamid=" + steamid)
+			return session.text
+		elif method == 3:
+			session = requests.get(url + 'key=' + apikey + "&steamids=" + steamid)
+			soup = BeautifulSoup(session.text,'html.parser')
+			return soup
+		elif method == 4:
+			session = requests.get(url + 'key=' + apikey + "&steamids=" + steamid)
+			return session.text
+		else:
+			return '[API_Get]: Bad Method!'
 
-	for i in range(0,len(dr)):
-		dr = r['response']['games'][i]['appid']
-		app_ids.append(dr)
-	print(app_ids)
+	def GetPlayerGames(apikey,steamid):
 
-def API_SteamCheck(method,url,apikey,steamId):
-	if method == 1:
-		session = requests.get(url + 'key=' + apikey + "&" + steamId)
-		soup = BeautifulSoup(session.text,'html.parser')
-		return soup
-	elif method == 2:
-		session = requests.get(url + 'key=' + apikey + "&" + steamId)
-		return session.text
-	else:
-		return '[API_SteamCheck]: Bad Method!'
+		session = SteamApi.API_Get(2,PLAYER_OWNED_GAMES,apikey,steamid)
+		r = json.loads(session)
+		dr = r['response']['games']
 
+		app_ids = []
 
-def GetFriendsCount(apikey,steamid):
-	soup = API_SteamCheck(1,FRIEND_LIST,apikey,steamid)
-	relation = re.findall('relationship',''.join(soup))
-	for i in range(0,len(relation)):
-		FRIENDS_COUNT = i+1
-	return FRIENDS_COUNT;
-	#print('Friends Count: ' + str(FRIENDS_COUNT))
+		for i in range(0,len(dr)):
+			dr = r['response']['games'][i]['appid']
+			app_ids.append(dr)
+		return app_ids
 
-def GetPlayerBadge(apikey,steamid):
-	soup = API_SteamCheck(1,PLAYER_BADGE,apikey,steamid)
-	print(soup)
-	badge = re.findall('badgeid',''.join(soup))
-	print(badge)
-	for i in range(0,len(badge)):
-		badge = i+1
-	return badge
+	def GetPlayerBadge(apikey,steamid):
 
-def GetPlayerBans(apikey,steamids):
-	r = API_SteamCheck(2,apikey,api_key,steamids)
-	r = json.loads(r)
+		tagtostr = []
 
-	SteamBansInfo = r['players'][0]
+		session = SteamApi.API_Get(2,PLAYER_BADGE,apikey,steamid)
+		r = json.loads(session)
+		badge = len(r['response']['badges'])
+		return badge
 
-	print('Community Banned: ' + str( SteamBansInfo['CommunityBanned'] ) ) 
-	
-	if SteamBansInfo['VACBanned']:
-		print('VAC Banned: ' + str( SteamBansInfo['VACBanned'] ) + '(' + str( SteamBansInfo['NumberOfVACBans'] ) + ')')
-		print('Days Since Last Ban: ' + str(SteamBansInfo['DaysSinceLastBan']) )
-	else:
-		print('VAC Banned: ' + str(SteamBansInfo['VACBanned']) )
+	def GetPlayerBans(apikey,steamids):
+		r = SteamApi.API_Get(4,PLAYER_BANS,apikey,steamids)
+		r = json.loads(r)
+		SteamBansInfo = r['players'][0]
+		CommunityBanned = str ( SteamBansInfo['CommunityBanned'] )
+		VACBanned = str ( SteamBansInfo['VACBanned'] )
+		NumberOfVACBans = str ( SteamBansInfo['NumberOfVACBans'] )
+		DaysSinceLastBan = str ( SteamBansInfo['DaysSinceLastBan'] )
+		GameBans = str ( SteamBansInfo['NumberOfGameBans'] )
+		EconomyBan = str ( SteamBansInfo['EconomyBan'] )
 
-	print('Game Bans: ' + str(SteamBansInfo['NumberOfGameBans']) )
+		result = [CommunityBanned,VACBanned,NumberOfVACBans,DaysSinceLastBan,GameBans,EconomyBan]
+		return result
 
-	print('Economy Banned: ' + str(SteamBansInfo['EconomyBan']) )
+	def GetSteamLevel(apikey,steamid):
+		r = SteamApi.API_Get(2,PLAYER_LEVEL_STEAM,apikey,steamid)
+		r = json.loads(r)
+		level = r['response']['player_level']
+		return level;
 
-def GetSteamLevel(apikey,steamid):
-	r = API_SteamCheck(2,PLAYER_LEVEL_STEAM,apikey,steamid)
-	r = json.loads(r)
-	level = r['response']['player_level']
-	return level;
+	def GetPlayerSummaries(apikey,steamids):
+		dct = []
 
-def GetPlayerSummaries(apikey,steamids):
-	dct = []
+		session = SteamApi.API_Get(4,PLAYER_SUMMARIES,apikey,steamids)
+		test = json.loads(session)
+		SteamInfo = test['response']['players'][0]
 
-	session = API_SteamCheck(2,PLAYER_SUMMARIES,apikey,steamids)
-	test = json.loads(session)
-	SteamInfo = test['response']['players'][0]
+		SteamId = str(SteamInfo['steamid'])
+		Name = SteamInfo['personaname']
+		RealName = SteamInfo['realname']
+		Custom_URL = SteamInfo['profileurl']
+		avatar = SteamInfo['avatarfull']
+		Vanity_URL = 'https://steamcommunity.com/profiles/' + str(SteamInfo['steamid'])
 
+		lastlogoff = time.localtime( int(SteamInfo['lastlogoff']) )
+		lastlogoff = str(time.asctime(lastlogoff))
 
-	lastlogoff = time.localtime( int(SteamInfo['lastlogoff']) )
-	lastlogoff = time.asctime(lastlogoff)
+		CreatedDate = time.localtime( int(SteamInfo['timecreated']) )
+		CreatedDate = str(time.asctime(CreatedDate))
 
+		result = [SteamId,Name,RealName,Custom_URL,Vanity_URL,lastlogoff,CreatedDate,avatar]
+		return result
+	def GetNameGameFromAppId(app_id):
+		response = requests.get('http://api.steampowered.com/ISteamApps/GetAppList/v0002/')
+		data = json.loads(response.text)
+		gameinfo = data['applist']['apps']
+		for game in gameinfo:
+			if game['appid'] == int(app_id):
+				print(game['name'])
 
-	CreatedDate = time.localtime( int(SteamInfo['timecreated']) )
-	CreatedDate = time.asctime(CreatedDate)
-
-
-	#print(test)
-
-	print('SteamID: ' + str(SteamInfo['steamid']))
-	print('Name: ' + SteamInfo['personaname'])
-	print('Настоящее имя: ' + SteamInfo['realname'])
-	print('Custom URL: ' + SteamInfo['profileurl'])
-	print('Vanity URL: https://steamcommunity.com/profiles/' + str(SteamInfo['steamid']))
-	print('Дата создания аккаунта: ' + str(CreatedDate))
-	print('Последний выход: ' + str(lastlogoff))
-	try:
-		print('Значков у игрока: ' + str(GetPlayerBadge(apikey,SteamInfo['steamid'])))
-	except:
-		print('Не удалось загрузить страницу с информацией о значках')
-	try:
-		print('Уровень STEAM: ' + str( GetSteamLevel(apikey,SteamInfo['steamid']) ))
-	except:
-		print('Не удалось загрузить страницу с информацией о уровне')
-	print('----------------------------------------------------')
-	try:
-		print( GetFriendsCount(apikey,SteamInfo['steamid']) )
-	except:
-		print('Не удалось загрузить страницу с информацией о друзьях')
-	try:
-		GetPlayerBans(apikey,SteamInfo['steamid'])
-	except:
-		print('Не удалось загрузить страницу с информацией о банах')
+	def ShowAll(sapi,sid):
+		print(SteamApi.GetPlayerSummaries(sapi,sid))
+		print('Level: ' + str( SteamApi.GetSteamLevel(sapi,sid) ))
+		print(SteamApi.GetPlayerBans(sapi,sid))
+		print('Badges: ' + str( SteamApi.GetPlayerBadge(sapi,sid) ))
