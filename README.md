@@ -12,9 +12,6 @@
 7. Ставить лайк/подписываться на руководство.
 8. Активация кода(-ов)
 
-- Чтобы заработали библиотеки в main.py измените строчку sys.insert(0,'Путь до папки lib')
-Пример: sys.insert(0,'D:/XSteam/Nxthing-Steam/lib')
-
 - В следующих версиях:
 1. Добавление аккаунта для буста часов, если уже открыта программа.
 2. Графический интерфейс для программы + .EXE формат.
@@ -23,5 +20,6 @@
 5. Кастомный статус для буста игр
 
 - Updates:
-1. Added new_ParseSteamProfile - parse info with api steam (26.12.20)
-2. Added Save/Load Api-Key,URL for Parse Profile (in GUI)
+1. Add new_ParseSteamProfile - parse info with api steam (26.12.20)
+2. Add Save/Load Api-Key,URL for Parse Profile (in GUI 26.12.20)
+3. Fix lib path (30.12.20) (wait add on github)
