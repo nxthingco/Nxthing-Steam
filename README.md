@@ -15,10 +15,14 @@
 2. Графический интерфейс для программы + .EXE формат.
 3. Получать ссылку на фон в маркете
 4. Буст комментариев в профиле
-5. Кастомный статус для буста игр
+5. Кастомный статус для буста игр ( в питоне вроде бы нельзя добавлять кастомные статусы )
 
 - Updates:
 1. Add new_ParseSteamProfile - parse info with api steam (26.12.20)
 2. Add Save/Load Api-Key,URL for Parse Profile (in GUI 26.12.20)
 3. Fix lib path (30.12.20)
 4. Auto download of new version (30.12.20)
+5. Added save button, after that all data will be saved in lib/texts/settings.json (30.12.20)
+6. Receiving all the games of the account, in the first 32 games the clock will be boosted (2.1.21)
+7. If you log into the game, after the release, the clock will restart (2.1.21)
+8. The GUI has been updated, you can start the boost from there by entering your username and password (2.1.21)
