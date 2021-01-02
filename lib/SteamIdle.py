@@ -9,7 +9,8 @@ from steam.enums import EResult
 from steam.enums.emsg import EMsg
 from steam.core.msg import GCMsgHdrProto
 from steam.client.gc import GameCoordinator
-from ApiSteam import *
+import steam.webauth as sw
+from ApiSteam import SteamApi
 
 username = ''
 password = ''
@@ -25,31 +26,44 @@ with open (new_path,'r') as f:
 	    accs.append(acc)
 	f.close()
 
-from libs import *
-import steam.webauth as sw
-
 def StartIdle(client):
+	print('---------------------')
 	start = datetime.now()
 	print('Start: ' + start.strftime("\nYear: %Y\nMonth: %B\nDay: %d\nTime: %H:%M:%S"))
+	print('--------------------------------------')
 
 	session = client.get_web_session_cookies()
 	steam_id = session['steamLogin'][:17]
-	print(steam_id)
 	Games = SteamApi.GetPlayerGames('FC50418A73E16C7AF179335DAC694619',steam_id)
 
 	for x in Games:
 		SteamApi.GetNameGameFromAppId(x)
+
+	print('-')
 
 	print(Games[:32])
 	print( 'Games: ' + ','.join(str(x) for x in Games))
 
 	client.set_ui_mode(3)
 	client.games_played(Games)
-	client.change_status(persona_state=1)
+	client.change_status(persona_state=2)
 	print('Games started.')
-	client.run_forever()
+	print(client)
+	while True:
+		gamesnow = client.current_games_played
+		if gamesnow:
+			print(gamesnow)
+			print('-------------')
+			time.sleep(2)
+		else:
+			print('Буст прерван.')
+			if client.relogin_available: client.relogin()
+			print(gamesnow)
+			client.games_played(Games)
+			print(gamesnow)
+			client.change_status(persona_state=2)
 
-def idle(method):
+def idle(method,SAlogin=None,SApass=None):
 	if method == 'MassAccount':
 		print('Started Mass Account Idling...')
 		clients = []
@@ -89,10 +103,6 @@ def idle(method):
 			clients[z].run_forever()
 
 	elif method == 'SingleAccount':
-
-		SAlogin = input('Введите логин от аккаунта: ')
-		SApass = input('Введите пароль от аккаунта: ')
-		
 		clientSA = SteamClient()
 		login = clientSA.login(username=SAlogin,password=SApass)
 		print(login)
@@ -144,49 +154,5 @@ def idle(method):
 				if login == EResult.OK:
 					print('Account Connected: [{0}:{1}]'.format(SAlogin,SApass))
 					StartIdle(clientSA)
-
-
-	elif method == 'NewAccount':
-		naLogin = input('[XSteam] Введите логин от аккаунта: ')
-		naPass = input('[XSteam] Введите пароль от аккаунта: ')
-
-		clientNA = SteamClient()
-		login = clientNA.login(username=naLogin,password=naPass)
-
-
-		if login == EResult.OK: # succesfull
-			print(Xtag + 'Account Connected: [{0}:{1}]'.format(naLogin,naPass))
-		else:
-			if login == EResult.LoggedInElsewhere: # somebody logged on
-				print('Steam Error: Logged In Elsewhere')
-			if login == EResult.NoConnection: # no connection
-					print('No Connection')
-			elif login == EResult.InvalidPassword: # invalid password
-					print('Invalid Password/Login')
-			elif login == EResult.RateLimitExceeded: # login limit
-				print('Steam Error: Try again later')
-			elif login == EResult.AccountLoginDeniedThrottle: # ?
-				print('Login attempt failed, try to throttle response to possible attacker')
-			elif login == EResult.AccountLoginDeniedNeedTwoFactor: # 2fa require
-				twofactor = input('Введите 2FA-Code: ')
-				login_again = clientSA.login(username=SAlogin,password=SApass,two_factor_code=twofactor)
-				if login_again == EResult.OK:
-					print('Account Connected: [{0}:{1}]'.format(SAlogin,SApass))
-				else:
-					if login_again == EResult.RateLimitExceeded: # login limit
-						print('Steam Error: Try again later')
-					elif login_again == EResult.AccountLoginDeniedThrottle: # ?
-						print('Login attempt failed, try to throttle response to possible attacker')
-					elif login_again == EResult.TwoFactorCodeMismatch: # wrong 2fa
-						print('Введен неверный 2FA Code, повторите попытку.')
-						twofactor = input('Введите 2FA-Code: ')
-						login_again = clientSA.login(username=SAlogin,password=SApass,two_factor_code=twofactor)
-						if login_again == EResult.OK:
-							print('Account Connected: [{1}:{0}]'.format(SAlogin,SApass))
-					elif clientSA.relogin_available:
-						print(Xtag + 'Try relogin [{0}:{1}]'.format(SAlogin,SApass))
-						clientSA.relogin()
-
-
 	else:
 		print('[XSteam Error]: Wrong method selected.')

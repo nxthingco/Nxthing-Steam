@@ -20,6 +20,3 @@ from csgo.client import CSGOClient
 from csgo.proto_enums import ECsgoSteamUserStat
 import xmltodict
 import json
-
-MAIN_API_KEY = '1'
-MAIN_URL = 'https://steamcommunity.com/id/8k-'
