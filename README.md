@@ -26,3 +26,4 @@
 6. Receiving all the games of the account, in the first 32 games the clock will be boosted (2.1.21)
 7. If you log into the game, after the release, the clock will restart (2.1.21)
 8. The GUI has been updated, you can start the boost from there by entering your username and password (2.1.21)
+9. Update Mass Account Idle. If on account log into the game, after the release, the clock will restart (3.1.21)
