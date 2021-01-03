@@ -1,4 +1,4 @@
-from libs import *
+from steam.steamid import SteamID
 class get_steam_info():
 	def steamid(sid):
 	    y = int(sid) - 76561197960265728

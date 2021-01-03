@@ -1,4 +1,9 @@
-from libs import *
+from gevent import monkey
+monkey.patch_all()
+import requests
+from bs4 import BeautifulSoup
+import re
+
 from ApiSteam import *
 from GetSteamIDS import get_steam_info as gsi
 

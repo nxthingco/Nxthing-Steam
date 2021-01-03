@@ -26,7 +26,22 @@ with open (new_path,'r') as f:
 	    accs.append(acc)
 	f.close()
 
-def StartIdle(client):
+"""
+
+	Persona State = 
+	Offline= 0
+	Online= 1
+	Busy= 2
+	Away= 3
+	Snooze= 4
+	LookingToTrade= 5
+	LookingToPlay= 6
+	Invisible= 7
+	Max= 8
+
+"""
+
+def StartIdle(client,PersonaState=1):
 	print('---------------------')
 	start = datetime.now()
 	print('Start: ' + start.strftime("\nYear: %Y\nMonth: %B\nDay: %d\nTime: %H:%M:%S"))
@@ -34,19 +49,25 @@ def StartIdle(client):
 
 	session = client.get_web_session_cookies()
 	steam_id = session['steamLogin'][:17]
-	Games = SteamApi.GetPlayerGames('FC50418A73E16C7AF179335DAC694619',steam_id)
+	try:
+		Games = SteamApi.GetPlayerGames('FC50418A73E16C7AF179335DAC694619',steam_id)
+		ProfilePrivate = False
+	except:
+		print('Error profile is private. Starting idling CS:GO,Dota 2')
+		ProfilePrivate = True
 
-	for x in Games:
-		SteamApi.GetNameGameFromAppId(x)
-
-	print('-')
-
-	print(Games[:32])
-	print( 'Games: ' + ','.join(str(x) for x in Games))
+	if ProfilePrivate != True:
+		for x in Games:
+			SteamApi.GetNameGameFromAppId(x)
+		print('-----')
+		print(Games[:32])
+		print( 'Games: ' + ','.join(str(x) for x in Games))
+	else:
+		Games = [730,540]
 
 	client.set_ui_mode(3)
 	client.games_played(Games)
-	client.change_status(persona_state=2)
+	client.change_status(persona_state=PersonaState)
 	print('Games started.')
 	print(client)
 	while True:
@@ -86,23 +107,50 @@ def idle(method,SAlogin=None,SApass=None):
 			r = clients[acc_id].login(username=username,password=password)
 			if r == EResult.OK:
 				print('Account Connected [{0}]: [{1}:{2}]'.format(acc_id,username,password))
+				session = clients[acc_id].get_web_session_cookies()
+				steam_id = session['steamLogin'][:17]
+				try:
+					Games = SteamApi.GetPlayerGames('FC50418A73E16C7AF179335DAC694619',steam_id)
+					ProfilePrivate = False
+				except:
+					print('Error profile is private. Starting idling CS:GO,Dota 2')
+					ProfilePrivate = True
+
+				if ProfilePrivate != True:
+					for x in Games:
+						SteamApi.GetNameGameFromAppId(x)
+					print('-----')
+					print(Games[:32])
+					print( 'Games: ' + ','.join(str(x) for x in Games))
+				else:
+					Games = [730,540]
+
+				clients[acc_id].games_played(Games)
+				clients[acc_id].change_status(persona_state=1)
+				print('Games started.')
 			else:
 				print('Error: ' + str(r))
 				continue
-			session = client[acc_id].get_web_session_cookies()
-			steam_id = session['steamLogin'][:17]
-			Games = SteamApi.GetPlayerGames('FC50418A73E16C7AF179335DAC694619',steam_id)
-			print(Games)
 
-			clients[acc_id].set_ui_mode(2)
-
-
-			clients[acc_id].games_played(Games)
-			print('[Acc Id: {0}] - [{1}:{2}] - Games Started'.format(acc_id,username,password))
-		for z in range(0,len(accs)):
-			clients[z].run_forever()
+		while True:
+			for z in range(0,len(accs)):
+				gamesnow = clients[z].current_games_played
+				if gamesnow:
+					print(f'Account: {z}')
+					print(gamesnow)
+					print('-------------')
+					time.sleep(2)
+				else:
+					print('Буст прерван.')
+					if clients[z].relogin_available: clients[z].relogin()
+					print(gamesnow)
+					clients[z].games_played(Games)
+					print(gamesnow)
+					clients[z].change_status(persona_state=2)
 
 	elif method == 'SingleAccount':
+		
+		#antenka33:vlodos33
 		clientSA = SteamClient()
 		login = clientSA.login(username=SAlogin,password=SApass)
 		print(login)

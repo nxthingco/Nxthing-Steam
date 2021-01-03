@@ -13,7 +13,7 @@ def CheckVersion(current_version):
 	version = re.split('Version\s+',classfind[2].text)
 	del version[0]
 	version = ''.join(version)
-	print(version)
+	print('Version on site: ' + str( version ) )
 
 	if float(version) > float(current_version):
 		print('Version is out of date')
